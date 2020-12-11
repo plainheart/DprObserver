@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title></title>
+  <title>Example for dpr-observer</title>
 </head>
 <body>
   <div class="container">
@@ -15,10 +15,10 @@
     </div>
     <p>Current DPR: <b class="pixel-ratio"></b></p>
   </div>
-  <script type="text/javascript" src="./dist/DprObserver.min.js"></script>
+  <script type="text/javascript" src="./dist/dpr-observer.min.js"></script>
   <script type="text/javascript">
-    const dom = document.querySelector('.pixel-ratio')
-    const dprObserver = new DprObserver(dpr => {
+    var dom = document.querySelector('.pixel-ratio')
+    var dprObserver = new DprObserver(function(dpr) {
       dom.innerText = dpr
     })
     dom.innerText = dprObserver.getDpr()

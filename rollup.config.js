@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import { name, description, version, author } from './package.json'
 import { terser } from 'rollup-plugin-terser'
 import { babel } from '@rollup/plugin-babel'
+import camelCase from 'lodash.camelcase'
 
 function wrapComment(str) {
   if (!str.includes('\n')) {
@@ -15,6 +16,7 @@ function wrapComment(str) {
 
 const license = readFileSync('LICENSE', 'utf8')
 const banner = wrapComment(`${name}\n${description}\n\n@version ${version}\n@author ${author}\n\n${license}`)
+const objName = `${name[0].toUpperCase()}${camelCase(name).slice(1)}`
 
 export default args => {
   const minimize = !!args.configMin
@@ -43,7 +45,7 @@ export default args => {
     {
       file: `dist/${name}.js`,
       format: 'umd',
-      name,
+      name: objName,
       sourcemap: minimize
     }
   ]
@@ -65,7 +67,7 @@ export default args => {
       {
         file: `dist/${name}.min.js`,
         format: 'umd',
-        name,
+        name: objName,
         plugins: [terserPlugin],
         banner
       }
