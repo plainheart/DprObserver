@@ -1,11 +1,11 @@
 {
-  "name": "DprObserver",
+  "name": "dpr-observer",
   "version": "0.0.1",
   "description": "An observer for listening to the change of device pixel ratio in browser.",
-  "main": "dist/DprObserver.js",
-  "module": "dist/DprObserver.esm.js",
-  "unpkg": "dist/DprObserver.min.js",
-  "jsdelivr": "dist/DprObserver.min.js",
+  "main": "dist/dpr-observer.js",
+  "module": "dist/dpr-observer.esm.js",
+  "unpkg": "dist/dpr-observer.min.js",
+  "jsdelivr": "dist/dpr-observer.min.js",
   "scripts": {
     "dev": "rollup -c -w",
     "build": "rollup -c --configMin"
@@ -20,12 +20,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/plainheart/DprObserver.git"
+    "url": "git+https://github.com/plainheart/dpr-observer.git"
   },
   "bugs": {
-    "url": "https://github.com/plainheart/DprObserver/issues"
+    "url": "https://github.com/plainheart/dpr-observer/issues"
   },
-  "homepage": "https://github.com/plainheart/DprObserver#readme",
+  "homepage": "https://github.com/plainheart/dpr-observer#readme",
   "files": [
     "dist",
     "src",

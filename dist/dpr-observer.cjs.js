@@ -91,4 +91,4 @@ var DprObserver = /*#__PURE__*/function () {
 }();
 
 module.exports = DprObserver;
-//# sourceMappingURL=DprObserver.cjs.js.map
+//# sourceMappingURL=dpr-observer.cjs.js.map

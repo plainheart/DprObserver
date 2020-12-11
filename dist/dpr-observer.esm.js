@@ -89,4 +89,4 @@ var DprObserver = /*#__PURE__*/function () {
 }();
 
 export default DprObserver;
-//# sourceMappingURL=DprObserver.esm.js.map
+//# sourceMappingURL=dpr-observer.esm.js.map

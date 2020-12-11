@@ -1,15 +1,20 @@
-import { name, version, author } from './package.json'
+import { readFileSync } from 'fs'
+import { name, description, version, author } from './package.json'
 import { terser } from 'rollup-plugin-terser'
 import { babel } from '@rollup/plugin-babel'
 
-// TODO: add LICENSE
-const banner = `
-/*!
- * ${name}
- * @version ${version}
- * @author ${author}
- */
-`
+function wrapComment(str) {
+  if (!str.includes('\n')) {
+    return `/*! ${str.replace(/\*\//g, '* /')} */`
+  }
+  return `/*!\n * ${str
+    .replace(/\*\//g, '* /')
+    .split('\n')
+    .join('\n * ')}\n */`
+}
+
+const license = readFileSync('LICENSE', 'utf8')
+const banner = wrapComment(`${name}\n${description}\n\n@version ${version}\n@author ${author}\n\n${license}`)
 
 export default args => {
   const minimize = !!args.configMin
