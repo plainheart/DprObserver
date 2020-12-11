@@ -1,6 +1,6 @@
 {
   "name": "dpr-observer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An observer for listening to the change of device pixel ratio in browser.",
   "main": "dist/dpr-observer.js",
   "module": "dist/dpr-observer.esm.js",
@@ -33,8 +33,11 @@
   ],
   "devDependencies": {
     "@babel/core": "^7.12.10",
+    "@babel/plugin-syntax-class-properties": "^7.12.1",
+    "@babel/plugin-transform-object-assign": "^7.12.1",
     "@babel/preset-env": "^7.12.10",
     "@rollup/plugin-babel": "^5.2.2",
+    "@rollup/plugin-json": "^4.1.0",
     "lodash.camelcase": "^4.3.0",
     "rollup": "^2.34.2",
     "rollup-plugin-terser": "^7.0.2"

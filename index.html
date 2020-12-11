@@ -15,11 +15,13 @@
     </div>
     <p>Current DPR: <b class="pixel-ratio"></b></p>
   </div>
-  <script type="text/javascript" src="./dist/dpr-observer.min.js"></script>
+  <script type="text/javascript" src="./dist/dpr-observer.js"></script>
   <script type="text/javascript">
     var dom = document.querySelector('.pixel-ratio')
     var dprObserver = new DprObserver(function(dpr) {
       dom.innerText = dpr
+    }, {
+      fallbackToAnimationListener: true
     })
     dom.innerText = dprObserver.getDpr()
   </script>

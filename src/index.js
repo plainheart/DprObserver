@@ -1,6 +1,19 @@
-import { getDevicePixelRatio, supportMatchMedia } from './helper'
+import { version } from '../package.json'
+import {
+  isFunction,
+  getDevicePixelRatio,
+  supportMatchMedia,
+  requestAnimationFrame,
+  cancelAnimationFrame,
+  getIEVersion
+} from './helper'
 
 const matchMediaSupported = supportMatchMedia()
+const isIE = !!getIEVersion()
+
+const defaultOptions = {
+  fallbackToAnimationListener: true
+}
 
 /**
  * An observer for listening to the change of device pixel ratio
@@ -9,18 +22,33 @@ const matchMediaSupported = supportMatchMedia()
  */
 class DprObserver {
 
-  constructor(onchange) {
-    if (!matchMediaSupported) {
-      throw new Error('DprObserver cannot run without `matchMedia` supported!')
+  static version = version
+
+  constructor(onchange, options) {
+    options = Object.assign({}, defaultOptions, options || {})
+    if (!matchMediaSupported && !options.fallbackToAnimationListener) {
+      throw new Error(
+        `DprObserver cannot run without \`matchMedia\` supported!
+        Please try to specify \`fallbackToAnimationListener\` as true to enable animation listener.`
+      )
     }
-    if (typeof onchange !== 'function') {
+    if (!isFunction(onchange)) {
       throw new Error('the required param `onchange` must be a function!')
     }
     this._onchange = onchange
-    this._init()
+    // use animation listener
+    // if browser is IE
+    // or matchMedia is not supported
+    // or `fallbackToAnimationListener` is specified as true
+    if ((!matchMediaSupported && options.fallbackToAnimationListener) || isIE) {
+      this._createAnimationListener()
+    }
+    else {
+      this._createMediaMatcher()
+    }
   }
 
-  _init() {
+  _createMediaMatcher() {
     const dpr = getDevicePixelRatio()
     const mqString = `(resolution: ${dpr}dppx)`
     this._mediaMatcher = window.matchMedia(mqString)
@@ -30,9 +58,21 @@ class DprObserver {
 
         // recreate the media mather with the new dpr
         this._disposeMediaMatcher()
-        this._init()
+        this._createMediaMatcher()
       }
     )
+  }
+
+  _createAnimationListener() {
+    let dpr = getDevicePixelRatio()
+    const func = () => {
+      const newDpr = getDevicePixelRatio()
+      if (dpr !== newDpr) {
+        this._onchange && this._onchange(dpr = newDpr)
+      }
+      requestAnimationFrame(func)
+    }
+    this._updateListener = requestAnimationFrame(func)
   }
 
   _disposeMediaMatcher() {
@@ -40,14 +80,21 @@ class DprObserver {
       this._mediaMatcher.removeListener(this._updateListener)
       this._mediaMatcher = null
     }
-    this._updateListener = null
+  }
+
+  _disposeAnimationListener() {
+    this._updateListener && cancelAnimationFrame(this._updateListener)
   }
 
   /**
    * Dispose the observer
    */
   dispose() {
+    this._disposeAnimationListener()
     this._disposeMediaMatcher()
+    if (this._updateListener) {
+      this._updateListener = null
+    }
     this._onchange = null
   }
 

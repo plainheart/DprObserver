@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs'
-import { name, description, version, author } from './package.json'
 import { terser } from 'rollup-plugin-terser'
 import { babel } from '@rollup/plugin-babel'
+import { name, description, version, author } from './package.json'
+import json from '@rollup/plugin-json'
 import camelCase from 'lodash.camelcase'
 
 function wrapComment(str) {
@@ -83,7 +84,10 @@ export default args => {
     }
   }
   else {
-    config.plugins = [babelPlugin]
+    config.plugins = [
+      json(),
+      babelPlugin
+    ]
   }
   return config
 }

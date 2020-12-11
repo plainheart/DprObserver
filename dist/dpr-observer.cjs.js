@@ -1,9 +1,48 @@
 'use strict';
 
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+var version = "0.0.2";
+
+function isFunction(obj) {
+  return obj && typeof obj === 'function';
+}
 /**
  * Provide a function to get current `devicePixelRatio`.
  * `devicePixelRatio` may be modified after browser's zoom
  */
+
 function getDevicePixelRatio() {
   var dpr = 1; // If in browser environment
 
@@ -14,10 +53,33 @@ function getDevicePixelRatio() {
   return dpr;
 }
 function supportMatchMedia() {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+  return typeof window !== 'undefined' && isFunction(window.matchMedia);
 }
+function getIEVersion() {
+  var version = 0;
+  var ua = navigator.userAgent;
+
+  if (navigator.appName === 'Microsoft Internet Explorer') {
+    new RegExp('MSIE ([0-9]{1,}[.0-9]{0,})').exec(ua);
+    version = parseFloat(RegExp.$1);
+  } else if (ua.indexOf('Trident') > -1 && ua.indexOf('rv:11.0') > -1) {
+    version = 11;
+  }
+
+  return version;
+}
+var requestAnimationFrame = typeof window !== 'undefined' && (window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame) || function (func) {
+  return setTimeout(func, 16);
+};
+var cancelAnimationFrame = typeof window !== 'undefined' && (window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window) || window.msCancelAnimationFrame && window.msCancelAnimationFrame.bind(window) || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame) || function (handle) {
+  return clearTimeout(handle);
+};
 
 var matchMediaSupported = supportMatchMedia();
+var isIE = !!getIEVersion();
+var defaultOptions = {
+  fallbackToAnimationListener: true
+};
 /**
  * An observer for listening to the change of device pixel ratio
  *
@@ -25,23 +87,32 @@ var matchMediaSupported = supportMatchMedia();
  */
 
 var DprObserver = /*#__PURE__*/function () {
-  function DprObserver(onchange) {
-    if (!matchMediaSupported) {
-      throw new Error('DprObserver cannot run without `matchMedia` supported!');
+  function DprObserver(onchange, options) {
+    options = _extends({}, defaultOptions, options || {});
+
+    if (!matchMediaSupported && !options.fallbackToAnimationListener) {
+      throw new Error("DprObserver cannot run without `matchMedia` supported!\n        Please try to specify `fallbackToAnimationListener` as true to enable animation listener.");
     }
 
-    if (typeof onchange !== 'function') {
+    if (!isFunction(onchange)) {
       throw new Error('the required param `onchange` must be a function!');
     }
 
-    this._onchange = onchange;
+    this._onchange = onchange; // use animation listener
+    // if browser is IE
+    // or matchMedia is not supported
+    // or `fallbackToAnimationListener` is specified as true
 
-    this._init();
+    if (!matchMediaSupported && options.fallbackToAnimationListener || isIE) {
+      this._createAnimationListener();
+    } else {
+      this._createMediaMatcher();
+    }
   }
 
   var _proto = DprObserver.prototype;
 
-  _proto._init = function _init() {
+  _proto._createMediaMatcher = function _createMediaMatcher() {
     var _this = this;
 
     var dpr = getDevicePixelRatio();
@@ -54,8 +125,26 @@ var DprObserver = /*#__PURE__*/function () {
 
       _this._disposeMediaMatcher();
 
-      _this._init();
+      _this._createMediaMatcher();
     });
+  };
+
+  _proto._createAnimationListener = function _createAnimationListener() {
+    var _this2 = this;
+
+    var dpr = getDevicePixelRatio();
+
+    var func = function func() {
+      var newDpr = getDevicePixelRatio();
+
+      if (dpr !== newDpr) {
+        _this2._onchange && _this2._onchange(dpr = newDpr);
+      }
+
+      requestAnimationFrame(func);
+    };
+
+    this._updateListener = requestAnimationFrame(func);
   };
 
   _proto._disposeMediaMatcher = function _disposeMediaMatcher() {
@@ -64,8 +153,10 @@ var DprObserver = /*#__PURE__*/function () {
 
       this._mediaMatcher = null;
     }
+  };
 
-    this._updateListener = null;
+  _proto._disposeAnimationListener = function _disposeAnimationListener() {
+    this._updateListener && cancelAnimationFrame(this._updateListener);
   }
   /**
    * Dispose the observer
@@ -73,7 +164,13 @@ var DprObserver = /*#__PURE__*/function () {
   ;
 
   _proto.dispose = function dispose() {
+    this._disposeAnimationListener();
+
     this._disposeMediaMatcher();
+
+    if (this._updateListener) {
+      this._updateListener = null;
+    }
 
     this._onchange = null;
   }
@@ -89,6 +186,8 @@ var DprObserver = /*#__PURE__*/function () {
 
   return DprObserver;
 }();
+
+_defineProperty(DprObserver, "version", version);
 
 module.exports = DprObserver;
 //# sourceMappingURL=dpr-observer.cjs.js.map
