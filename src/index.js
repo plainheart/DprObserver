@@ -58,6 +58,7 @@ class DprObserver {
     }
   }
 
+  // FIXME: seems chrome 49 or older cannot trigger update listener
   _createMediaMatcher() {
     const dpr = getDevicePixelRatio()
     const mqString = `(resolution: ${dpr}dppx)`
