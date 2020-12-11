@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body>
+  <div class="container">
+    <div class="inner-container">
+      <p>This example demonstrates the effect of zooming the page in
+         and out (or moving it to a screen with a different scaling
+         factor) on the value of the property <code>Window.devicePixelRatio</code>.
+      </p>
+      <p>Try it and watch what happens!</p>
+    </div>
+    <p>Current DPR: <b class="pixel-ratio"></b></p>
+  </div>
+  <script type="text/javascript" src="./dist/DprObserver.min.js"></script>
+  <script type="text/javascript">
+    const dom = document.querySelector('.pixel-ratio')
+    const dprObserver = new DprObserver(dpr => {
+      dom.innerText = dpr
+    })
+    dom.innerText = dprObserver.getDpr()
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "DprObserver",
+  "version": "0.0.1",
+  "description": "An observer for listening to the change of device pixel ratio in browser.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "jsdelivr": "dist/index.min.js",
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c --configMin"
+  },
+  "keywords": [
+    "dpr",
+    "observer",
+    "devicePixelRatio",
+    "browser"
+  ],
+  "author": "plainheart",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "src",
+    "index.html"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.10",
+    "@rollup/plugin-babel": "^5.2.2",
+    "rollup": "^2.34.2",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
