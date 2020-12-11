@@ -21,6 +21,8 @@
     var dprObserver = new DprObserver(function(dpr) {
       dom.innerText = dpr
     }, {
+      // if IE, these options won't work. Always use animation listener.
+      onlyUseAnimationListener: false,
       fallbackToAnimationListener: true
     })
     dom.innerText = dprObserver.getDpr()

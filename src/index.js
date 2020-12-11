@@ -12,6 +12,14 @@ const matchMediaSupported = supportMatchMedia()
 const isIE = !!getIEVersion()
 
 const defaultOptions = {
+  /**
+   * Only use animation listener.
+   * This works for most of browsers.
+   */
+  onlyUseAnimationListener: false,
+  /**
+   * prefer matchMedia and fallback to animation listener if not supported.
+   */
   fallbackToAnimationListener: true
 }
 
@@ -26,7 +34,7 @@ class DprObserver {
 
   constructor(onchange, options) {
     options = Object.assign({}, defaultOptions, options || {})
-    if (!matchMediaSupported && !options.fallbackToAnimationListener) {
+    if (!options.onlyUseAnimationListener && !matchMediaSupported && !options.fallbackToAnimationListener) {
       throw new Error(
         `DprObserver cannot run without \`matchMedia\` supported!
         Please try to specify \`fallbackToAnimationListener\` as true to enable animation listener.`
@@ -37,10 +45,12 @@ class DprObserver {
     }
     this._onchange = onchange
     // use animation listener
-    // if browser is IE
-    // or matchMedia is not supported
-    // or `fallbackToAnimationListener` is specified as true
-    if ((!matchMediaSupported && options.fallbackToAnimationListener) || isIE) {
+    // if `onlyUseAnimationListener`is specified as true
+    // or browser is IE
+    // or `matchMedia` is not supported and `fallbackToAnimationListener` is specified as true
+    if (options.onlyUseAnimationListener || isIE
+      || (!matchMediaSupported && options.fallbackToAnimationListener)
+    ) {
       this._createAnimationListener()
     }
     else {

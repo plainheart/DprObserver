@@ -37,7 +37,7 @@
     return _extends.apply(this, arguments);
   }
 
-  var version = "0.0.2";
+  var version = "0.0.3";
 
   function isFunction(obj) {
     return obj && typeof obj === 'function';
@@ -82,6 +82,15 @@
   var matchMediaSupported = supportMatchMedia();
   var isIE = !!getIEVersion();
   var defaultOptions = {
+    /**
+     * Only use animation listener.
+     * This works for most of browsers.
+     */
+    onlyUseAnimationListener: false,
+
+    /**
+     * prefer matchMedia and fallback to animation listener if not supported.
+     */
     fallbackToAnimationListener: true
   };
   /**
@@ -94,7 +103,7 @@
     function DprObserver(onchange, options) {
       options = _extends({}, defaultOptions, options || {});
 
-      if (!matchMediaSupported && !options.fallbackToAnimationListener) {
+      if (!options.onlyUseAnimationListener && !matchMediaSupported && !options.fallbackToAnimationListener) {
         throw new Error("DprObserver cannot run without `matchMedia` supported!\n        Please try to specify `fallbackToAnimationListener` as true to enable animation listener.");
       }
 
@@ -103,11 +112,11 @@
       }
 
       this._onchange = onchange; // use animation listener
-      // if browser is IE
-      // or matchMedia is not supported
-      // or `fallbackToAnimationListener` is specified as true
+      // if `onlyUseAnimationListener`is specified as true
+      // or browser is IE
+      // or `matchMedia` is not supported and `fallbackToAnimationListener` is specified as true
 
-      if (!matchMediaSupported && options.fallbackToAnimationListener || isIE) {
+      if (options.onlyUseAnimationListener || isIE || !matchMediaSupported && options.fallbackToAnimationListener) {
         this._createAnimationListener();
       } else {
         this._createMediaMatcher();
