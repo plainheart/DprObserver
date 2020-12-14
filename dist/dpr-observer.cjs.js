@@ -33,7 +33,7 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
-var version = "0.0.4";
+var version = "0.0.5";
 
 function isFunction(obj) {
   return obj && typeof obj === 'function';
@@ -138,8 +138,8 @@ var DprObserver = /*#__PURE__*/function () {
     var tech = options.tech || TECH;
 
     if (isString(tech)) {
-      if (!TECH.indexOf(tech) === -1) {
-        throw new Error("unsupported tech `" + tech + "`, only " + TECH.join(', ') + " supported.");
+      if (TECH.indexOf(tech) === -1) {
+        throw new Error("Unsupported tech `" + tech + "`. Only " + TECH.join(', ') + " supported.");
       }
 
       if (tech.indexOf(',') !== -1) {
