@@ -48,8 +48,8 @@ class DprObserver {
     options = Object.assign({}, defaultOptions, options || {})
     let tech = options.tech || TECH
     if (isString(tech)) {
-     if (!TECH.indexOf(tech) === -1) {
-       throw new Error(`unsupported tech \`${tech}\`, only ${TECH.join(', ')} supported.`)
+     if (TECH.indexOf(tech) === -1) {
+       throw new Error(`Unsupported tech \`${tech}\`. Only ${TECH.join(', ')} supported.`)
      }
      if (tech.indexOf(',') !== -1) {
        tech = tech.split(',')
