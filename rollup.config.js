@@ -76,7 +76,8 @@ export default args => {
   }
   const config = {
     input: 'src/index.js',
-    output: outputs
+    output: outputs,
+    plugins: [json()]
   }
   if (!minimize) {
     config.watch = {
@@ -84,10 +85,7 @@ export default args => {
     }
   }
   else {
-    config.plugins = [
-      json(),
-      babelPlugin
-    ]
+    config.plugins.push(babelPlugin)
   }
   return config
 }

@@ -18,12 +18,16 @@
   <script type="text/javascript" src="./dist/dpr-observer.js"></script>
   <script type="text/javascript">
     var dom = document.querySelector('.pixel-ratio')
-    var dprObserver = new DprObserver(function(dpr) {
-      dom.innerText = dpr
+    var dprObserver = new DprObserver(function(e) {
+      console.log(e)
+      dom.innerText = e.dpr
     }, {
-      // if IE, these options won't work. Always use animation listener.
-      onlyUseAnimationListener: false,
-      fallbackToAnimationListener: true
+      // all supported tech: resize, animationFrame, matchMedia
+      tech: ['matchMedia', 'animationFrame'],
+      // use fallback
+      // fallback: false,
+      // if prefer resize tech
+      // preferResize: true
     })
     dom.innerText = dprObserver.getDpr()
   </script>

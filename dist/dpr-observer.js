@@ -37,10 +37,13 @@
     return _extends.apply(this, arguments);
   }
 
-  var version = "0.0.3";
+  var version = "0.0.4";
 
   function isFunction(obj) {
     return obj && typeof obj === 'function';
+  }
+  function isString(obj) {
+    return typeof obj === 'string';
   }
   /**
    * Provide a function to get current `devicePixelRatio`.
@@ -78,20 +81,47 @@
   var cancelAnimationFrame = typeof window !== 'undefined' && (window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window) || window.msCancelAnimationFrame && window.msCancelAnimationFrame.bind(window) || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame) || function (handle) {
     return clearTimeout(handle);
   };
+  var on = function () {
+    if (document.addEventListener) {
+      return function (element, event, handler) {
+        if (element && event && handler) {
+          element.addEventListener(event, handler, false);
+        }
+      };
+    } else {
+      return function (element, event, handler) {
+        if (element && event && handler) {
+          element.attachEvent('on' + event, handler);
+        }
+      };
+    }
+  }();
+  var off = function () {
+    if (document.removeEventListener) {
+      return function (element, event, handler) {
+        if (element && event) {
+          element.removeEventListener(event, handler, false);
+        }
+      };
+    } else {
+      return function (element, event, handler) {
+        if (element && event) {
+          element.detachEvent('on' + event, handler);
+        }
+      };
+    }
+  }();
 
   var matchMediaSupported = supportMatchMedia();
   var isIE = !!getIEVersion();
+  var TECH_MATCH_MEDIA = 'matchMedia';
+  var TECH_ANIMATION_FRAME = 'animationFrame';
+  var TECH_RESIZE = 'resize';
+  var TECH = [TECH_MATCH_MEDIA, TECH_ANIMATION_FRAME, TECH_RESIZE];
   var defaultOptions = {
-    /**
-     * Only use animation listener.
-     * This works for most of browsers.
-     */
-    onlyUseAnimationListener: false,
-
-    /**
-     * prefer matchMedia and fallback to animation listener if not supported.
-     */
-    fallbackToAnimationListener: true
+    tech: TECH,
+    preferResize: false,
+    fallback: true
   };
   /**
    * An observer for listening to the change of device pixel ratio
@@ -101,63 +131,158 @@
 
   var DprObserver = /*#__PURE__*/function () {
     function DprObserver(onchange, options) {
-      options = _extends({}, defaultOptions, options || {});
-
-      if (!options.onlyUseAnimationListener && !matchMediaSupported && !options.fallbackToAnimationListener) {
-        throw new Error("DprObserver cannot run without `matchMedia` supported!\n        Please try to specify `fallbackToAnimationListener` as true to enable animation listener.");
-      }
-
+      // check onchange callback function
       if (!isFunction(onchange)) {
         throw new Error('the required param `onchange` must be a function!');
       }
 
-      this._onchange = onchange; // use animation listener
-      // if `onlyUseAnimationListener`is specified as true
-      // or browser is IE
-      // or `matchMedia` is not supported and `fallbackToAnimationListener` is specified as true
+      this._onchange = onchange; // check options
 
-      if (options.onlyUseAnimationListener || isIE || !matchMediaSupported && options.fallbackToAnimationListener) {
-        this._createAnimationListener();
-      } else {
-        this._createMediaMatcher();
+      options = _extends({}, defaultOptions, options || {});
+      var tech = options.tech || TECH;
+
+      if (isString(tech)) {
+        if (!TECH.indexOf(tech) === -1) {
+          throw new Error("unsupported tech `" + tech + "`, only " + TECH.join(', ') + " supported.");
+        }
+
+        if (tech.indexOf(',') !== -1) {
+          tech = tech.split(',');
+        }
+      } // if prefer resize tech
+
+
+      if (options.preferResize) {
+        if (tech.indexOf(TECH_RESIZE) === -1) {
+          tech.unshift(TECH_RESIZE);
+        } else {
+          tech = TECH_RESIZE.concat(tech.filter(t !== TECH_RESIZE));
+        }
+      }
+
+      var techLen = tech.length;
+      var fallback;
+
+      for (var i = 0, _t; i < techLen; i++) {
+        _t = tech[i];
+
+        if (TECH.indexOf(_t) !== -1) {
+          if (this._init(_t)) {
+            console.log(fallback ? "fallback to the `" + _t + "` tech." : "`" + _t + "` tech is currently used.");
+            break;
+          }
+
+          if (!options.fallback) {
+            throw new Error("The tech `" + _t + "` seems to be not supported. Please enable `fallback` to try others techs.");
+          }
+
+          fallback = true;
+          console.warn("The tech `" + _t + "` seems to be not supported.");
+        } else {
+          console.warn("Unsupported tech `" + _t + "`.");
+        }
       }
     }
 
     var _proto = DprObserver.prototype;
 
-    _proto._createMediaMatcher = function _createMediaMatcher() {
+    _proto._init = function _init(tech) {
+      switch (tech) {
+        case TECH_RESIZE:
+          this._createResizeListener();
+
+          break;
+
+        case TECH_MATCH_MEDIA:
+          // don't use matchMedia in IE even if it supports
+          if (!matchMediaSupported || isIE) {
+            return false;
+          }
+
+          this._createMediaMatcher();
+
+          break;
+
+        case TECH_ANIMATION_FRAME:
+          this._createAnimationListener();
+
+          break;
+      }
+
+      return true;
+    };
+
+    _proto._createResizeListener = function _createResizeListener() {
       var _this = this;
+
+      var dpr = getDevicePixelRatio();
+      on(window, 'resize', this._updateListener = function (e) {
+        var newDpr = getDevicePixelRatio();
+
+        if (dpr !== newDpr) {
+          _this._onchange && _this._onchange({
+            tech: TECH_RESIZE,
+            oldDpr: dpr,
+            dpr: dpr = newDpr,
+            event: e
+          });
+        }
+      });
+    } // FIXME: seems chrome 49 or older cannot trigger update listener
+    ;
+
+    _proto._createMediaMatcher = function _createMediaMatcher() {
+      var _this2 = this;
 
       var dpr = getDevicePixelRatio();
       var mqString = "(resolution: " + dpr + "dppx)";
       this._mediaMatcher = window.matchMedia(mqString);
 
-      this._mediaMatcher.addListener(this._updateListener = function () {
-        _this._onchange(getDevicePixelRatio()); // recreate the media mather with the new dpr
+      this._mediaMatcher.addListener(this._updateListener = function (e) {
+        var newDpr = getDevicePixelRatio();
+
+        _this2._onchange({
+          tech: TECH_MATCH_MEDIA,
+          oldDpr: dpr,
+          dpr: dpr = newDpr,
+          event: e
+        }); // recreate the media mather with the new dpr
 
 
-        _this._disposeMediaMatcher();
+        _this2._disposeMediaMatcher();
 
-        _this._createMediaMatcher();
+        _this2._createMediaMatcher();
       });
     };
 
     _proto._createAnimationListener = function _createAnimationListener() {
-      var _this2 = this;
+      var _this3 = this;
 
       var dpr = getDevicePixelRatio();
 
-      var func = function func() {
+      var func = function func(e) {
         var newDpr = getDevicePixelRatio();
 
         if (dpr !== newDpr) {
-          _this2._onchange && _this2._onchange(dpr = newDpr);
+          _this3._onchange && _this3._onchange({
+            tech: TECH_ANIMATION_FRAME,
+            oldDpr: dpr,
+            dpr: dpr = newDpr,
+            event: {
+              handle: _this3._updateListener,
+              ts: e
+            }
+          });
         }
 
         requestAnimationFrame(func);
       };
 
       this._updateListener = requestAnimationFrame(func);
+    };
+
+    _proto._disposeResizeListener = function _disposeResizeListener() {
+      this._updateListener && off(window, 'resize', this._updateListener);
     };
 
     _proto._disposeMediaMatcher = function _disposeMediaMatcher() {
@@ -179,6 +304,8 @@
     _proto.dispose = function dispose() {
       this._disposeAnimationListener();
 
+      this._disposeResizeListener();
+
       this._disposeMediaMatcher();
 
       if (this._updateListener) {
@@ -197,10 +324,20 @@
       return getDevicePixelRatio();
     };
 
+    DprObserver.getDpr = function getDpr() {
+      return getDevicePixelRatio();
+    };
+
     return DprObserver;
   }();
 
   _defineProperty(DprObserver, "version", version);
+
+  _defineProperty(DprObserver, "TECH_RESIZE", TECH_RESIZE);
+
+  _defineProperty(DprObserver, "TECH_MATCH_MEDIA", TECH_MATCH_MEDIA);
+
+  _defineProperty(DprObserver, "TECH_ANIMATION_FRAME", TECH_ANIMATION_FRAME);
 
   return DprObserver;
 

@@ -1,6 +1,6 @@
 {
   "name": "dpr-observer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An observer for listening to the change of device pixel ratio in browser.",
   "main": "dist/dpr-observer.js",
   "module": "dist/dpr-observer.esm.js",
