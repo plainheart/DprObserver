@@ -14,7 +14,7 @@ export function getDevicePixelRatio() {
   let dpr = 1
   // If in browser environment
   if (typeof window !== 'undefined') {
-    dpr = window.devicePixelRatio || (window.screen.deviceXDPI / window.screen.logicalXDPI) || 1
+    dpr = window.devicePixelRatio || (window.screen && (window.screen.deviceXDPI / window.screen.logicalXDPI)) || 1
   }
   return dpr
 }
